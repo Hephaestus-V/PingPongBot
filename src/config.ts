@@ -10,7 +10,7 @@ export interface Config {
   sleepMs: number;
   dataDir: string;
   stuckBlocks: number;
-  priorityFeeGwei: number;
+  priorityFeeGwei: string;
   maxReplacementsPerTx: number;
   recentSetSize: number;
 }
@@ -59,8 +59,7 @@ export const config: Config = {
   sleepMs: getEnvNumberWithDefault('SLEEP_MS', 5000),
   dataDir: getEnvWithDefault('DATA_DIR', './data'),
   stuckBlocks: getEnvNumberWithDefault('STUCK_BLOCKS', 12),
-  priorityFeeGwei: getEnvNumberWithDefault('PRIORITY_FEE_GWEI', 2.0),
+  priorityFeeGwei: getEnvWithDefault('PRIORITY_FEE_GWEI', '2.0'),
   maxReplacementsPerTx: getEnvNumberWithDefault('MAX_REPLACEMENTS_PER_TX', 6),
   recentSetSize: getEnvNumberWithDefault('RECENT_SET_SIZE', 5000),
 };
-

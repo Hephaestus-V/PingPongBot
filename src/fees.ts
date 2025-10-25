@@ -23,7 +23,7 @@ export async function computeFees(
   const block: Block | null = await provider.getBlock('latest');
   const baseFee = block?.baseFeePerGas ?? parseUnits('1', 'gwei');
   
-  let maxPriorityFeePerGas = parseUnits(config.priorityFeeGwei.toString(), 'gwei');
+  let maxPriorityFeePerGas = parseUnits(config.priorityFeeGwei, 'gwei');
   let maxFeePerGas = baseFee * 2n + maxPriorityFeePerGas;
   
   if (prior) {
@@ -36,4 +36,3 @@ export async function computeFees(
   
   return { maxFeePerGas, maxPriorityFeePerGas };
 }
-
