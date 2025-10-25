@@ -1,6 +1,7 @@
 services:
   pingpong-bot:
-    build: .
+    build:
+      context: .
     container_name: pingpong-bot
     restart: unless-stopped
     env_file:
@@ -8,4 +9,5 @@ services:
     volumes:
       - ./data:/app/data
     environment:
+      - NODE_ENV=production
       - DATA_DIR=/app/data
