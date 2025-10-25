@@ -58,14 +58,40 @@ export async function waitForPendingTx(
         return state;
       }
 
-      const tx = await replacePongTx(
-        contract,
-        wallet,
-        p.pongArg,
-        p.nonce,
-        BigInt(p.maxFeePerGas),
-        BigInt(p.maxPriorityFeePerGas)
-      );
+      let tx;
+      try {
+        tx = await replacePongTx(
+          contract,
+          wallet,
+          p.pongArg,
+          p.nonce,
+          BigInt(p.maxFeePerGas),
+          BigInt(p.maxPriorityFeePerGas)
+        );
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        if (msg.includes('already known')) {
+          logger.warn({ err: msg, txHash: p.txHash, nonce: p.nonce }, 'Replacement broadcast already known; will keep waiting');
+          await sleep(2000);
+          continue;
+        }
+        if (msg.includes('nonce has already been used') || msg.includes('nonce too low')) {
+          try {
+            const latestNonce = await wallet.getNonce('latest');
+            if (latestNonce > p.nonce) {
+              markProcessed(state, p.pingKey);
+              logger.info({ nonce: p.nonce, latestNonce }, 'Pending nonce already used; assuming pong mined');
+              state.pendingTx = undefined;
+              return state;
+            }
+          } catch (e: any) {
+            logger.warn({ err: e?.message || String(e) }, 'Failed to check latest nonce after NONCE_EXPIRED');
+          }
+        }
+        logger.warn({ err: msg, nonce: p.nonce }, 'Replacement broadcast failed; will retry on next check');
+        await sleep(2000);
+        continue;
+      }
 
       const currentBlock = await provider.getBlockNumber();
 
@@ -119,6 +145,9 @@ export async function handlePing(
 
   if (state.pendingTx) {
     state = await waitForPendingTx(provider, contract, wallet, state);
+    if (wasProcessed(state, key)) {
+      return state;
+    }
   }
 
   const nonce = await wallet.getNonce('pending');
@@ -137,6 +166,8 @@ export async function handlePing(
     pongArg: log.transactionHash
   };
 
+  await writeState(state);
+
   state = await waitForPendingTx(provider, contract, wallet, state);
 
   state.lastProcessedBlock = log.blockNumber;
@@ -144,4 +175,3 @@ export async function handlePing(
 
   return state;
 }
-

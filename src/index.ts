@@ -115,6 +115,10 @@ async function scanOnce(
   if (logs.length === 0) {
     state.lastProcessedBlock = batchEnd;
     state.lastProcessedLogIndex = -1;
+  } else {
+    const last = logs[logs.length - 1];
+    state.lastProcessedBlock = last.blockNumber;
+    state.lastProcessedLogIndex = last.logIndex;
   }
 
   logger.info({ processedUpTo: state.lastProcessedBlock }, 'Batch complete');
@@ -123,4 +127,3 @@ async function scanOnce(
 }
 
 void main();
-
